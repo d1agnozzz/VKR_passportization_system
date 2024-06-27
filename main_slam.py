@@ -17,18 +17,12 @@
 * along with PYSLAM. If not, see <http://www.gnu.org/licenses/>.
 """
 
-# -----------------------------------------------------------
-# fix from https://github.com/tum-vision/fastfusion/issues/21
-import gi
-gi.require_version('Gtk', '2.0')
-# -----------------------------------------------------------
-
 import numpy as np
 import cv2
 import math
 import time 
 
-import platform 
+import platform
 
 from config import Config
 
@@ -36,6 +30,7 @@ from slam import Slam, SlamState
 from camera  import PinholeCamera
 from ground_truth import groundtruth_factory
 from dataset import dataset_factory
+from thirdparty.panoptic_deeplab import PanopticDeeplabInference
 
 #from mplot3d import Mplot3d
 #from mplot2d import Mplot2d
@@ -56,7 +51,7 @@ from feature_tracker_configs import FeatureTrackerConfigs
 
 from parameters import Parameters  
 import multiprocessing as mp 
-
+import pypcd
 
 if __name__ == "__main__":
 
@@ -64,22 +59,27 @@ if __name__ == "__main__":
 
     dataset = dataset_factory(config.dataset_settings)
 
+    # panoptic_segmentation = PanopticDeeplabInference( './thirdparty/wide_resnet41_os16_panoptic_deeplab_cityscapes_trainfine_saved_model')
+
     #groundtruth = groundtruth_factory(config.dataset_settings)
     groundtruth = None # not actually used by Slam() class; could be used for evaluating performances 
 
-    cam = PinholeCamera(config.cam_settings['Camera.width'], config.cam_settings['Camera.height'],
-                        config.cam_settings['Camera.fx'], config.cam_settings['Camera.fy'],
-                        config.cam_settings['Camera.cx'], config.cam_settings['Camera.cy'],
+    cam = PinholeCamera(int(config.cam_settings['Camera.width']*float(config.dataset_scale)), 
+                        int(config.cam_settings['Camera.height']*float(config.dataset_scale)),
+                        int(config.cam_settings['Camera.fx']*float(config.dataset_scale)), 
+                        int(config.cam_settings['Camera.fy']*float(config.dataset_scale)),
+                        int(config.cam_settings['Camera.cx']*float(config.dataset_scale)), 
+                        int(config.cam_settings['Camera.cy']*float(config.dataset_scale)),
                         config.DistCoef, config.cam_settings['Camera.fps'])
     
-    num_features=2000 
+    num_features=1000
 
-    tracker_type = FeatureTrackerTypes.DES_BF      # descriptor-based, brute force matching with knn 
+    tracker_type = FeatureTrackerTypes.DES_FLANN      # descriptor-based, brute force matching with knn 
     #tracker_type = FeatureTrackerTypes.DES_FLANN  # descriptor-based, FLANN-based matching 
 
     # select your tracker configuration (see the file feature_tracker_configs.py) 
     # FeatureTrackerConfigs: SHI_TOMASI_ORB, FAST_ORB, ORB, ORB2, ORB2_FREAK, ORB2_BEBLID, BRISK, AKAZE, FAST_FREAK, SIFT, ROOT_SIFT, SURF, SUPERPOINT, FAST_TFEAT, CONTEXTDESC
-    tracker_config = FeatureTrackerConfigs.TEST
+    tracker_config = FeatureTrackerConfigs.DISK
     tracker_config['num_features'] = num_features
     tracker_config['tracker_type'] = tracker_type
     
@@ -92,8 +92,9 @@ if __name__ == "__main__":
 
     viewer3D = Viewer3D()
     
+    
     if platform.system()  == 'Linux':    
-        display2d = Display2D(cam.width, cam.height)  # pygame interface 
+        display2d = Display2D(int(cam.width), int(cam.height))  # pygame interface 
     else: 
         display2d = None  # enable this if you want to use opencv window
 
@@ -102,13 +103,14 @@ if __name__ == "__main__":
     do_step = False   
     is_paused = False 
     
-    img_id = 0  #180, 340, 400   # you can start from a desired frame id if needed 
+    img_id = 0 #180, 340, 400   # you can start from a desired frame id if needed 
     while dataset.isOk():
             
         if not is_paused: 
             print('..................................')
             print('image: ', img_id)                
             img = dataset.getImageColor(img_id)
+            # img = panoptic_segmentation.evaluateSegmentation(img)
             if img is None:
                 print('image is empty')
                 getchar()
@@ -155,7 +157,7 @@ if __name__ == "__main__":
                     print('sleeping for frame')
                     time.sleep(frame_duration-duration)        
                     
-            img_id += 1  
+            img_id += 1
         else:
             time.sleep(1)                                 
         
@@ -194,6 +196,18 @@ if __name__ == "__main__":
         if viewer3D is not None:
             is_paused = not viewer3D.is_paused()         
                         
+
+    points = slam.map.get_points()
+    export_points = np.empty((1, 3))
+    
+
+    for i, point in enumerate(points):
+        export_points = np.vstack((export_points, point.pt))
+    
+    print(f"export_points shape: {export_points.shape}")
+
+    np.save('exported_map.npy', export_points)
+        
     slam.quit()
     
     #cv2.waitKey(0)

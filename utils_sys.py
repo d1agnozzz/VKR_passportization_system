@@ -220,15 +220,18 @@ class Logging(object):
 # since method is an attribute of name!
 def import_from(module, name, method=None):
     try:      
+        print('import')
         imported_module = __import__(module, fromlist=[name])
+        print('getattr')
         imported_name = getattr(imported_module, name)
         if method is None: 
             return imported_name
         else:
             return getattr(imported_name, method) 
-    except: 
+    except Exception as err: 
         if method is not None: 
             name = name + '.' + method 
+        print('import exception: ', err)
         Printer.orange('WARNING: cannot import ' + name + ' from ' + module + ', check the file TROUBLESHOOTING.md')    
         return None   
     

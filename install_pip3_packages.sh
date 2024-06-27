@@ -40,10 +40,11 @@ install_pip_package torchvision==0.5.0
 install_pip_package ordered-set # from https://pypi.org/project/ordered-set/
 
 # The following line might not work
-install_pip_package tensorflow-gpu==1.14.0  # 1.14.0 works with all the modules contained in pyslam2
+#install_pip_package tensorflow-gpu==1.14.0  # 1.14.0 works with all the modules contained in pyslam2
 # Thanks Utkarsh for the fix https://github.com/luigifreda/pyslam/issues/92 
-#export TF_BINARY_URL=https://storage.googleapis.com/tensorflow/mac/cpu/tensorflow-1.14.0-py3-none-any.whl
-#pip3 install --upgrade $TF_BINARY_URL
+export TF_BINARY_URL=https://storage.googleapis.com/tensorflow/mac/cpu/tensorflow-1.14.0-py3-none-any.whl
+pip3 install --upgrade $TF_BINARY_URL
+
 
 # it may be required if you have errors with pillow
 #pip3 uninstall pillow 

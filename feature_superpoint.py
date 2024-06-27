@@ -39,7 +39,7 @@ class SuperPointOptions:
         # default options from demo_superpoints
         self.weights_path=config.cfg.root_folder + '/thirdparty/superpoint/superpoint_v1.pth'
         self.nms_dist=4
-        self.conf_thresh=0.015
+        self.conf_thresh=0.0001
         self.nn_thresh=0.7
         
         use_cuda = torch.cuda.is_available() & do_cuda

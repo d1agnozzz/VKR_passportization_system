@@ -81,13 +81,14 @@ else
     if [ ! -d pangolin ]; then
         if [[ "$OSTYPE" == "linux-gnu"* ]]; then    
             sudo apt-get install -y libglew-dev
-            git clone https://github.com/uoip/pangolin.git
-            cd pangolin
-            PANGOLIN_UOIP_REVISION=3ac794a
-            git checkout $PANGOLIN_UOIP_REVISION
-            cd ..      
-            # copy local changes 
-            rsync ./pangolin_changes/python_CMakeLists.txt ./pangolin/python/CMakeLists.txt             
+            # git clone https://github.com/uoip/pangolin.git
+            # cd pangolin
+            # PANGOLIN_UOIP_REVISION=3ac794a
+            # git checkout $PANGOLIN_UOIP_REVISION
+            # cd ..      
+            # # copy local changes 
+            # rsync ./pangolin_changes/python_CMakeLists.txt ./pangolin/python/CMakeLists.txt 
+            git clone --recursive https://gitlab.com/luigifreda/pypangolin.git pangolin
         fi 
         if [[ "$OSTYPE" == "darwin"* ]]; then
             git clone --recursive https://gitlab.com/luigifreda/pypangolin.git pangolin 
@@ -97,7 +98,7 @@ else
     if [ ! -f pangolin.cpython-*.so ]; then   
         make_dir build   
         cd build
-        cmake .. -DBUILD_PANGOLIN_LIBREALSENSE=OFF -DBUILD_PANGOLIN_FFMPEG=OFF $EXTERNAL_OPTION # disable realsense 
+        cmake .. -DBUILD_PANGOLIN_LIBREALSENSE=OFF $EXTERNAL_OPTION # disable realsense 
         make -j8
         cd ..
         #python setup.py install

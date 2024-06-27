@@ -17,12 +17,6 @@
 * along with PYSLAM. If not, see <http://www.gnu.org/licenses/>.
 """
 
-# -----------------------------------------------------------
-# fix from https://github.com/tum-vision/fastfusion/issues/21
-import gi
-gi.require_version('Gtk', '2.0')
-# -----------------------------------------------------------
-
 import numpy as np
 import cv2
 import math
@@ -72,12 +66,12 @@ if __name__ == "__main__":
                         config.DistCoef, config.cam_settings['Camera.fps'])
 
 
-    num_features=2000  # how many features do you want to detect and track?
+    num_features=-1  # how many features do you want to detect and track?
 
     # select your tracker configuration (see the file feature_tracker_configs.py) 
     # LK_SHI_TOMASI, LK_FAST
     # SHI_TOMASI_ORB, FAST_ORB, ORB, BRISK, AKAZE, FAST_FREAK, SIFT, ROOT_SIFT, SURF, SUPERPOINT, FAST_TFEAT
-    tracker_config = FeatureTrackerConfigs.LK_SHI_TOMASI
+    tracker_config = FeatureTrackerConfigs.SUPERPOINT
     tracker_config['num_features'] = num_features
     
     feature_tracker = feature_tracker_factory(**tracker_config)

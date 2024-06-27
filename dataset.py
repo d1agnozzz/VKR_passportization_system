@@ -57,17 +57,17 @@ def dataset_factory(settings):
 
     dataset = None 
     if type == 'kitti':
-        dataset = KittiDataset(path, name, associations, DatasetType.KITTI)
+        dataset = KittiDataset(path, name, associations, scale=float(settings['scale']), type=DatasetType.KITTI)
         dataset.set_is_color(is_color)   
     if type == 'tum':
         dataset = TumDataset(path, name, associations, DatasetType.TUM)
     if type == 'video':
-        dataset = VideoDataset(path, name, associations, DatasetType.VIDEO)   
+        dataset = VideoDataset(path, name, associations, scale=float(settings['scale']), type=DatasetType.VIDEO)   
     if type == 'folder':
         fps = 10 # a default value 
         if 'fps' in settings:
             fps = int(settings['fps'])
-        dataset = FolderDataset(path, name, fps, associations, DatasetType.FOLDER)      
+        dataset = FolderDataset(path, name, fps, associations, scale=float(settings['scale']), type =DatasetType.FOLDER)      
     if type == 'live':
         dataset = LiveDataset(path, name, associations, DatasetType.LIVE)   
                 
@@ -105,14 +105,25 @@ class Dataset(object):
     def getImageColor(self, frame_id):
         try: 
             img = self.getImage(frame_id)
+            # clahe = cv2.createCLAHE(clipLimit=1, tileGridSize=(8,8))
+            # print('lab')
+            # lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+            # l, a, b = cv2.split(lab)
+            # print('clahe apply')
+            # le = clahe.apply(l)
+            # lab = cv2.merge((le, a, b))
+            # print('back 2 bgr')
+            # img = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
             if img.ndim == 2:
                 return cv2.cvtColor(img,cv2.COLOR_GRAY2RGB)     
             else:
+                # return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                 return img             
-        except:
+        except Exception as e:
             img = None  
             #raise IOError('Cannot open dataset: ', self.name, ', path: ', self.path)        
             Printer.red('Cannot open dataset: ', self.name, ', path: ', self.path)
+            print(e)
             return img    
         
     def getTimestamp(self):
@@ -123,7 +134,7 @@ class Dataset(object):
 
 
 class VideoDataset(Dataset): 
-    def __init__(self, path, name, associations=None, type=DatasetType.VIDEO): 
+    def __init__(self, path, name, associations=None, scale: int = 1,type=DatasetType.VIDEO): 
         super().__init__(path, name, None, associations, type)    
         self.filename = path + '/' + name 
         #print('video: ', self.filename)
@@ -133,8 +144,8 @@ class VideoDataset(Dataset):
         else: 
             print('Processing Video Input')
             self.num_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) 
+            self.width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH) * scale)
+            self.height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT) * scale) 
             self.fps = float(self.cap.get(cv2.CAP_PROP_FPS))
             self.Ts = 1./self.fps 
             print('num frames: ', self.num_frames)  
@@ -153,7 +164,7 @@ class VideoDataset(Dataset):
         self._next_timestamp = self._timestamp + self.Ts 
         if ret is False:
             print('ERROR while reading from file: ', self.filename)
-        return image       
+        return cv2.resize(image, (self.width,self.height), interpolation=cv2.INTER_AREA)
 
 
 
@@ -181,7 +192,7 @@ class LiveDataset(Dataset):
 
 
 class FolderDataset(Dataset): 
-    def __init__(self, path, name, fps=None, associations=None, type=DatasetType.VIDEO): 
+    def __init__(self, path, name, fps=None, associations=None, scale: float = 1, type=DatasetType.VIDEO): 
         super().__init__(path, name, fps, associations, type)  
         if fps is None: 
             fps = 10 # default value  
@@ -191,6 +202,7 @@ class FolderDataset(Dataset):
         self.skip=1
         self.listing = []    
         self.maxlen = 1000000    
+        self.scale = scale
         print('Processing Image Directory Input')
         self.listing = glob.glob(path + '/' + self.name)
         self.listing.sort()
@@ -213,7 +225,8 @@ class FolderDataset(Dataset):
             raise IOError('error reading file: ', image_file)               
         # Increment internal counter.
         self.i = self.i + 1
-        return img
+        # return img
+        return cv2.resize(img, (int(img.shape[1]*self.scale), int(img.shape[0]*self.scale)), interpolation=cv2.INTER_AREA)
 
 class FolderDatasetParallelStatus:
     def __init__(self, i, maxlen, listing, skip):
@@ -334,12 +347,13 @@ class Webcam(object):
 
 
 class KittiDataset(Dataset):
-    def __init__(self, path, name, associations=None, type=DatasetType.KITTI): 
+    def __init__(self, path, name, associations=None, scale: float = 1,type=DatasetType.KITTI): 
         super().__init__(path, name, 10, associations, type)
         self.fps = 10
         self.image_left_path = '/image_0/'
         self.image_right_path = '/image_1/'           
         self.timestamps = np.loadtxt(self.path + '/sequences/' + self.name + '/times.txt')
+        self.scale = scale
         self.max_frame_id = len(self.timestamps)
         print('Processing KITTI Sequence of lenght: ', len(self.timestamps))
         
@@ -363,7 +377,7 @@ class KittiDataset(Dataset):
             else:
                 self._next_timestamp = self.timestamps            
         self.is_ok = (img is not None)
-        return img 
+        return cv2.resize(img, (int(img.shape[1]*self.scale), int(img.shape[0]*self.scale)))
 
     def getImage1(self, frame_id):
         img = None

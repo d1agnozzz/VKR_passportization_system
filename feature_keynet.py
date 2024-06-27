@@ -219,6 +219,7 @@ class KeyNetDescFeature2D:
     
     def load_model(self):        
         # Create graph before session :)
+        tf.compat.v1.disable_eager_execution()
         self.graph = tf.Graph().as_default()
         
         # GPU Usage

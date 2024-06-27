@@ -1,9 +1,11 @@
 import sys 
+import os 
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 
 sys.path.append("../../")
+print(sys.path)
 from config import Config
 
 from mplot_figure import MPlotFigure
@@ -31,11 +33,11 @@ timer = TimerFps()
 img = cv2.imread('../data/kitti06-12-color.png',cv2.IMREAD_COLOR)
 #img = cv2.imread('../data/mars1.png')
 
-num_features=2000
+num_features=4000
 
  
 # select your tracker configuration (see the file feature_tracker_configs.py) 
-feature_tracker_config = FeatureTrackerConfigs.TEST
+feature_tracker_config = FeatureTrackerConfigs.DISK
 feature_tracker_config['num_features'] = num_features
 
 feature_manager_config = FeatureManagerConfigs.extract_from(feature_tracker_config)
@@ -53,6 +55,7 @@ for i in range(N):
     #kps = feature_manager.detect(img) 
     
     # detect keypoints and compute descriptors 
+    print(img)
     kps, des = feature_manager.detectAndCompute(img) 
         
     timer.refresh()

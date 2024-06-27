@@ -120,7 +120,7 @@ tracker_type = FeatureTrackerTypes.DES_BF      # descriptor-based, brute force m
 #tracker_type = FeatureTrackerTypes.DES_FLANN  # descriptor-based, FLANN-based matching 
 
 # select your tracker configuration (see the file feature_tracker_configs.py) 
-tracker_config = FeatureTrackerConfigs.TEST
+tracker_config = FeatureTrackerConfigs.SUPERPOINT
 tracker_config['num_features'] = num_features
 tracker_config['match_ratio_test'] = 0.8        # 0.7 is the default in feature_tracker_configs.py
 tracker_config['tracker_type'] = tracker_type

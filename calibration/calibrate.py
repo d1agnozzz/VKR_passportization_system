@@ -24,7 +24,7 @@ from glob import glob
 
 
 # CHESSBOARD SIZE
-pattern_size = (11, 7)
+pattern_size = (13, 8)
 
 
 def splitfn(fn):

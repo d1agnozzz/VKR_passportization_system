@@ -34,7 +34,7 @@ img = cv2.imread('../data/kitti06-12-color.png',cv2.IMREAD_COLOR)
 num_features=2000
 
 # select your tracker configuration (see the file feature_tracker_configs.py) 
-feature_tracker_config = FeatureTrackerConfigs.TEST
+feature_tracker_config = FeatureTrackerConfigs.DISK
 feature_tracker_config['num_features'] = num_features
 
 feature_manager_config = FeatureManagerConfigs.extract_from(feature_tracker_config)

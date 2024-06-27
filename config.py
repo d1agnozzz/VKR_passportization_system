@@ -91,6 +91,9 @@ class Config(object):
 
         self.dataset_path = self.dataset_settings['base_path'];
         self.dataset_settings['base_path'] = os.path.join( __location__, self.dataset_path)
+
+        self.dataset_scale = self.config_parser['DATASET']['scale']
+        self.dataset_settings['scale'] = self.dataset_scale
         #print('dataset_settings: ', self.dataset_settings)
 
     # get camera settings
